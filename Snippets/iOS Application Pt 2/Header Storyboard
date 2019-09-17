@@ -1,0 +1,24 @@
+*************
+Snip 1 - Constants
+
+//
+// Display related constants
+//
+let notAttachedImageName = "notAttached"
+let notConnectedImageName = "notConnected"
+let connectedImageName = "connected"
+
+*************
+Snip 2 - Setup controls
+
+private func setupControls() {
+
+connectStatusImage.image = UIImage(named: notAttachedImageName)
+rssiLabel.text = "---"
+offOnButton.layer.borderWidth = 1.0
+offOnButton.layer.borderColor = UIColor.lightGray.cgColor
+offOnButton.layer.cornerRadius = offOnButton.frame.height / 4.0
+offOnButton.setImage(UIImage(named: "lampOn"), for: .selected)
+offOnButton.setImage(UIImage(named: "lampOff"), for: .normal)
+
+}

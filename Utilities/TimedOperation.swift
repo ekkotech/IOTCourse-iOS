@@ -9,12 +9,12 @@
 import Foundation
 
 class TimedOperationQueue: OperationQueue {
-    private let minTimeout:TimeInterval = 35.0  // Seconds
-    private var timerTick:TimeInterval = 10.0   // Seconds
-    private var numIterations:Int = 3
-    private var iterationCount:Int = 0
-    private var watchdog:Timer = Timer()
-    private weak var lastOperation:AppOperation? = nil
+    private let minTimeout: TimeInterval = 35.0  // Seconds
+    private var timerTick: TimeInterval = 10.0   // Seconds
+    private var numIterations: Int = 3
+    private var iterationCount: Int = 0
+    private var watchdog: Timer = Timer()
+    private weak var lastOperation: AppOperation? = nil
     
     init(name: String, QoS: QualityOfService, timeout: TimeInterval) {
         super.init()
@@ -29,22 +29,27 @@ class TimedOperationQueue: OperationQueue {
     
     private func handleTimeout(timer: Timer) {
         Logger.debug("In \(self.name ?? "TimedOperationQueue") handleTimeout - on queue: \(operationCount)")
-        if operationCount > 0 {
+//        if operationCount > 0 {
+        if let thisOperation = operations.first as? AppOperation {
             // Queue not empty
-            if operations[0] == lastOperation {
+            if thisOperation == lastOperation {
                 if iterationCount >= numIterations {
                     // Remove operation from queue
                     Logger.debug("WARNING: Removing message from operation queue")
-                    if let op = operations[0] as? AppOperation {
-                        op.isExecuting = false
-                        op.isFinished = true
-                        iterationCount = 0
-                    }
+                    thisOperation.isExecuting = false
+                    thisOperation.isFinished = true
+                    iterationCount = 0
+//                    if let op = operations[0] as? AppOperation {
+//                        op.isExecuting = false
+//                        op.isFinished = true
+//                        iterationCount = 0
+//                    }
                 }
                 else { iterationCount = iterationCount + 1 }
             }
             else {
-                lastOperation = operations[0] as? AppOperation
+                lastOperation = thisOperation
+//                lastOperation = operations[0] as? AppOperation
                 iterationCount = 0
             }
         }

@@ -1,0 +1,52 @@
+***************
+Snip 1 - Action handlers
+
+//
+// MARK: - Private functions
+//
+private func modelSend(value: UIColor) {
+if let md = model {
+md.set(entity: kEntityLssRgb, value: Rgb(red: Float(value.rgba.red),
+green: Float(value.rgba.green),
+blue: Float(value.rgba.blue)), response: false)
+}
+}
+
+// In both handleRadialValueChanged and handleSliderValueChanged
+
+add
+
+modelSend(value: sender.value)
+
+***************
+Snip 2 - Setup subscription, update function
+
+private func setupSubscriptions() {
+
+nc.addObserver(forName: .entityLssRgb,
+object: nil,
+queue: OperationQueue.main,
+using: {notification in
+if let payload = notification.object as? RgbPayload {
+self.updateControls(newValue: UIColor(red: CGFloat(payload.rgb.red),
+green: CGFloat(payload.rgb.green),
+blue: CGFloat(payload.rgb.blue),
+alpha: 1.0))
+}
+})
+
+}
+
+private func updateControls(newValue: UIColor) {
+
+radialPicker.value = newValue
+sliderPicker.value = newValue
+
+}
+
+***************
+Snip 3 - Model: setupSubscriptions
+
+self.rgb.get()
+
+

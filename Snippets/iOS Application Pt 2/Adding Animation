@@ -1,0 +1,36 @@
+*************
+Snip 1 - Animation (no IB handling)
+
+// Add after isDark = true in adjustBackground
+let animation = CABasicAnimation(keyPath: "backgroundColor")
+animation.fromValue = defaultOuterColorLight.cgColor
+layer.backgroundColor = defaultOuterColorDark.cgColor
+layer.add(animation, forKey: "backgroundColor")
+
+// Add after isDark = false in adjustBackground
+let animation = CABasicAnimation(keyPath: "backgroundColor")
+animation.fromValue = defaultOuterColorDark.cgColor
+layer.backgroundColor = defaultOuterColorLight.cgColor
+layer.add(animation, forKey: "backgroundColor")
+
+*************
+Snip 2 - IB Handling
+
+#if TARGET_INTERFACE_BUILDER || targetEnvironment(simulator)
+layer.backgroundColor = defaultOuterColorDark.cgColor
+#else
+let animation = CABasicAnimation(keyPath: "backgroundColor")
+animation.fromValue = defaultOuterColorLight.cgColor
+layer.backgroundColor = defaultOuterColorDark.cgColor
+layer.add(animation, forKey: "backgroundColor")
+#endif
+
+#if TARGET_INTERFACE_BUILDER || targetEnvironment(simulator)
+layer.backgroundColor = defaultOuterColorLight.cgColor
+#else
+let animation = CABasicAnimation(keyPath: "backgroundColor")
+animation.fromValue = defaultOuterColorDark.cgColor
+layer.backgroundColor = defaultOuterColorLight.cgColor
+layer.add(animation, forKey: "backgroundColor")
+#endif
+

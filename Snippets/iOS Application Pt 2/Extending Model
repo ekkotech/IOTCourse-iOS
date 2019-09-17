@@ -1,0 +1,245 @@
+
+internal let kEntityLssOffOn        = "lssoffon"
+internal let kEntityLssRgb          = "lssrgb"
+
+
+static let entityLssOffOn = Notification.Name(kEntityLssOffOn)
+static let entityLssRgb = Notification.Name(kEntityLssRgb)
+
+
+
+internal struct RgbPayload {
+var rgb: Rgb
+var isNotifying: Bool
+var didWrite: Bool
+}
+
+//
+// Public structures
+//
+internal struct Rgb {
+var red: Float
+var green: Float
+var blue: Float
+
+init(red: Float, green: Float, blue: Float) {
+self.red = red
+self.green = green
+self.blue = blue
+}
+}
+
+
+//
+// IOTCourse strings
+//
+fileprivate let iotBaseUuid             = "775E0000-8AA0-40F6-B037-EA770326E665"
+// Led String Service
+fileprivate let lssServiceShortUuid     = "0100"
+fileprivate let offOnShortUuid          = "0101"
+fileprivate let rgbShortUuid            = "0102"
+//
+fileprivate let alsServiceShortUuid     = "0200"
+fileprivate let luminShortUuid          = "0201"
+fileprivate let lmThreshShortUuid       = "0202"
+fileprivate let lmHystShortUuid         = "0203"
+fileprivate let lmOffOnShortUuid        = "0204"
+
+
+
+//
+// LSS Service
+fileprivate let lssServiceUuid = CBUUID(baseUuid: iotBaseUuid, shortUuid: lssServiceShortUuid)
+fileprivate let lssOffOnUuid = CBUUID(baseUuid: iotBaseUuid, shortUuid: offOnShortUuid)
+fileprivate let lssRgbUuid = CBUUID(baseUuid: iotBaseUuid, shortUuid: rgbShortUuid)
+//
+// ALS Service
+fileprivate let alsServiceUuid = CBUUID(baseUuid: iotBaseUuid, shortUuid: alsServiceShortUuid)
+fileprivate let alsLuminUuid = CBUUID(baseUuid: iotBaseUuid, shortUuid: luminShortUuid)
+fileprivate let alsLmThreshUuid = CBUUID(baseUuid: iotBaseUuid, shortUuid: lmThreshShortUuid)
+fileprivate let alsLmHystUuid = CBUUID(baseUuid: iotBaseUuid, shortUuid: lmThreshShortUuid)
+fileprivate let alsLmOffOnUuid = CBUUID(baseUuid: iotBaseUuid, shortUuid: lmOffOnShortUuid)
+
+
+// Primary service - change as needed
+fileprivate let defaultService = lssServiceUuid
+
+
+************* Insert after existing entities ***********
+internal struct BleRgb: ExpressibleByIntegerLiteral {
+typealias IntegerLiteralType = Int
+
+var red: UInt8
+var green: UInt8
+var blue: UInt8
+
+init(integerLiteral hexRgb: IntegerLiteralType) {
+self.init(red: UInt8(hexRgb & 0x0000FF),
+green: UInt8((hexRgb & 0x00FF00) >> 8),
+blue: UInt8((hexRgb & 0xFF0000) >> 16))
+}
+
+init(red: UInt8, green: UInt8, blue: UInt8) {
+self.red = red
+self.green = green
+self.blue = blue
+}
+}
+
+fileprivate class RgbEntity: Entity {
+typealias T = Rgb
+typealias U = BleRgb
+
+let name: String
+let topic: Notification.Name
+var isNotifying: Bool = false
+var didWrite: Bool = false
+let suuid: CBUUID
+let cuuid: CBUUID
+let permission: UInt8
+let bleService: BleService
+let nc: NotificationCenter = NotificationCenter.default
+var value: T
+var bleValue: U
+
+init(name: String, topic: Notification.Name, suuid: CBUUID, cuuid: CBUUID, permission: UInt8, bleService: BleService, defaultValue: T) {
+self.name = name
+self.topic = topic
+self.suuid = suuid
+self.cuuid = cuuid
+self.permission = permission
+self.bleService = bleService
+self.value = defaultValue
+self.bleValue = BleRgb.init(red: UInt8(defaultValue.red) * UInt8.max,
+green: UInt8(defaultValue.green) * UInt8.max,
+blue: UInt8(defaultValue.blue) * UInt8.max)
+}
+
+// Client inbound
+func set(value: T, response: Bool) {
+guard (permission & kPermitWrite) == kPermitWrite else { return}
+
+self.value = value
+bleValue.red = UInt8(value.red * 255.0)
+bleValue.green = UInt8(value.green * 255.0)
+bleValue.blue = UInt8(value.blue * 255.0)
+bleService.write(service: suuid,
+charac: cuuid,
+data: withUnsafeBytes(of: &bleValue, { Data($0) }),
+response: response)
+if response == false {
+publish()
+}
+}
+
+// Ble inbound
+func valueChanged(data: Data) {
+guard let result = data.to(type: BleRgb.self) else {
+Logger.debug("ERROR: converting data")
+return
+}
+
+bleValue = result
+value.red = Float(bleValue.red) / Float(UInt8.max)
+value.green = Float(bleValue.green) / Float(UInt8.max)
+value.blue = Float(bleValue.blue) / Float(UInt8.max)
+publish()
+}
+
+// Publication
+func publish() {
+nc.post(name: topic,
+object: RgbPayload(rgb: value,
+isNotifying: isNotifying,
+didWrite: didWrite))
+}
+
+}
+
+
+*******************
+Add to EntityType
+
+case rgb(RgbEntity)
+
+
+*******************
+Add to class Model
+
+private let offOn: BinaryEntity
+private let rgb: RgbEntity
+
+*******************
+Add to class initialiser
+
+rgb = RgbEntity(name: kEntityLssRgb,
+topic: .entityLssRgb,
+suuid: lssServiceUuid,
+cuuid: lssRgbUuid,
+permission: kPermitRead | kPermitWrite,
+bleService: bleService,
+defaultValue: Rgb(red: 0.0, green: 0.0, blue: 0.0))
+offOn = BinaryEntity(name: kEntityLssOffOn,
+topic: .entityLssOffOn,
+suuid: lssServiceUuid,
+cuuid: lssOffOnUuid,
+permission: kPermitRead | kPermitWrite,
+bleService: bleService,
+defaultValue: false)
+
+
+********************
+Add to lookup initialisers
+
+,
+kEntityLssRgb : .rgb(rgb),
+kEntityLssOffOn : .binary(offOn)
+
+
+,
+lssRgbUuid : .rgb(rgb),
+lssOffOnUuid : .binary(offOn)
+
+*********************
+Add to writeConfirm observer
+
+case .rgb(var rgb):
+rgb.writeConfirm()
+
+*********************
+Add to characNotification observer
+
+case .rgb(_):
+break       // Not meaningful for rgb leds
+
+*********************
+Add to characValue observer
+
+case .rgb(let rgb):
+rgb.valueChanged(data: payload.data)
+
+
+*********************
+
+Add to getEntity
+
+case .rgb(let rgb):
+rgb.get()
+
+
+*********************
+Add to set entity
+
+case .rgb(let rgb):
+guard let val = value as? Rgb else { return }
+rgb.set(value: val, response: response)
+
+
+*********************
+Add to setNotify
+
+case .rgb(_):
+break       // Not meaningful for rgb
+
+
+

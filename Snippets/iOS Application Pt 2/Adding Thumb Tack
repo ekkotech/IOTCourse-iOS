@@ -1,0 +1,63 @@
+*****************
+Snip 1 - add to private properties
+
+private var thumbTack: ThumbTack = ThumbTack()
+
+*****************
+
+Snip 2 - Add to commonInit()
+
+self.addSubview(thumbTack)
+
+*****************
+
+Snip 3 - New function template
+
+private func locationForPosition(position: CGFloat) -> CGPoint {
+
+return CGPoint(x: activeFrame.origin.x + (activeFrame.width * position),
+y: activeFrame.origin.y + (activeFrame.height / 2.0))
+
+}
+
+*****************
+
+Snip 4 - New function template
+
+private func updateThumbTack(thumb: ThumbTack, color: UIColor, channel: ColorChannel) {
+
+var loc: CGPoint
+
+switch channel {
+case .red:
+loc = locationForPosition(position: color.rgba.red)
+case .green:
+loc = locationForPosition(position: color.rgba.green)
+case .blue:
+loc = locationForPosition(position: color.rgba.blue)
+case .mono:
+loc = locationForPosition(position: color.hsba.brightness)
+}
+
+// Update the location
+thumb.center = CGPoint(x: loc.x, y: loc.y)
+
+// Update the color
+if channel != .mono {
+thumb.color = color
+}
+else {
+let bright = color.hsba.brightness
+thumb.color = UIColor(red: bright, green: bright, blue: bright, alpha: 1.0)
+}
+
+}
+
+*****************
+Snip 5 - LayoutSubviews
+
+thumbTack.diameter = (layer.frame.height * defaultThumbHeightRatio).rounded(.down)
+updateThumbTack(thumb: thumbTack, color: value, channel: channel)
+
+
+
