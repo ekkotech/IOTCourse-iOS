@@ -1,0 +1,63 @@
+/*** Snippets for iOS Application Part 1, Model Skeleton ***/
+
+/*** Model_Skeleton_Snip_1 ***/
+
+import CoreBluetooth
+import os
+
+
+// MARK: - Model class
+//
+internal final class Model {
+    
+    private let bleService: BleService
+    
+    init(bleService: BleService) {
+        self.bleService = bleService
+    }
+}
+
+/*** End ***/
+
+/*** Model_Skeleton_Snip_2 ***/
+
+fileprivate let defaultService = CBUUID(string: "F0001110-0451-4000-B000-000000000000")
+
+/*** End ***/
+
+/*** Model_Skeleton_Snip_3 ***/
+/* Replaces initialiser */
+
+private let primaryService: CBUUID
+
+init(bleService: BleService, primaryService: CBUUID = defaultService) {
+    self.bleService = bleService
+    self.primaryService = primaryService
+}
+
+/*** End ***/
+
+/*** Model_Skeleton_Snip_4 ***/
+
+// MARK: - Public (Internal) API
+//
+func get(entity: String) {
+    //
+}
+
+func set(entity: String, value: Bool, response: Bool) {
+    //
+}
+
+func setNotify(entity: String, state: Bool) {
+    //
+}
+
+func getRssi() {
+    //
+}
+
+/*** End ***/
+
+
+
