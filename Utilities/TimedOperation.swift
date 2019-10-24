@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import os
 
 class TimedOperationQueue: OperationQueue {
     private let minTimeout: TimeInterval = 35.0  // Seconds
@@ -28,22 +29,17 @@ class TimedOperationQueue: OperationQueue {
     }
     
     private func handleTimeout(timer: Timer) {
-        Logger.debug("In \(self.name ?? "TimedOperationQueue") handleTimeout - on queue: \(operationCount)")
-//        if operationCount > 0 {
+        os_log("In %s handleTimeout - on queue: %d", log: Log.ble, type: .info, self.name ?? "TimedOperationQueue", operationCount)
+
         if let thisOperation = operations.first as? AppOperation {
             // Queue not empty
             if thisOperation == lastOperation {
                 if iterationCount >= numIterations {
                     // Remove operation from queue
-                    Logger.debug("WARNING: Removing message from operation queue")
+                    os_log("WARNING: Removing message from operation queue", log: Log.ble, type: .info)
                     thisOperation.isExecuting = false
                     thisOperation.isFinished = true
                     iterationCount = 0
-//                    if let op = operations[0] as? AppOperation {
-//                        op.isExecuting = false
-//                        op.isFinished = true
-//                        iterationCount = 0
-//                    }
                 }
                 else { iterationCount = iterationCount + 1 }
             }
