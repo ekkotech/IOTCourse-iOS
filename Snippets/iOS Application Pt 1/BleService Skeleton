@@ -1,0 +1,86 @@
+/*** Snippets for iOS Application Part 1, BleService Skeleton ***/
+
+/*** BleService_Skeleton_Snip_1 ***/
+
+import CoreBluetooth
+import os
+
+
+// MARK: - BleService class
+//
+internal final class BleService: NSObject {
+    
+    override init() {
+        super.init()
+        //
+    }
+    
+}
+
+/*** End ***/
+
+/*** BleService_Skeleton_Snip_2 ***/
+a)
+
+private var centralManager: CBCentralManager?
+
+b)
+centralManager = CBCentralManager(delegate: self,
+                                  queue: DispatchQueue(label: "com.iotcourse.bleq",
+                                                       qos: .userInitiated),
+                                  options: initOptions)
+
+c)
+private let initOptions = [CBCentralManagerOptionShowPowerAlertKey : NSNumber(value: true)]
+
+/*** End ***/
+
+/*** BleService_Skeleton_Snip_3 ***/
+
+// MARK: - CBCentralManager delegate
+//
+extension BleService: CBCentralManagerDelegate {
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {
+        //
+    }
+}
+
+// MARK: - CBPeripheralDelegate
+//
+extension BleService: CBPeripheralDelegate {
+    //
+}
+
+/*** End ***/
+
+/*** BleService_Skeleton_Snip_4 ***/
+
+os_log("Central Manager state: %s", log: Log.ble, type: .info, central.state.description)
+
+/*** End ***/
+
+/*** BleService_Skeleton_Snip_5 ***/
+
+// MARK: - Public (Internal) API
+//
+func attachPeripheral(service: CBUUID) {
+    //
+}
+
+func read(service: CBUUID, charac: CBUUID) {
+    //
+}
+
+func write(service: CBUUID, charac: CBUUID, data: Data, response: Bool) {
+    //
+}
+
+func setNotify(service: CBUUID, charac: CBUUID, state: Bool) {
+    //
+}
+
+func readRssi() {
+    //
+}
+
+/*** End ***/
