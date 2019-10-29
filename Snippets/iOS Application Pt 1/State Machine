@@ -180,7 +180,15 @@ machine = Machine.init(actionMap: actionMap, stateActionMap: stateActionMap, err
 // MARK: - Private functions
 //
 private func setupStateMaps() {
-    
+        // TODO: performNullAction is inserted for tracing flow during development
+        // Replace with nil when code is stable
+        
+        // State action map
+
+        // Action map
+
+        // Error map
+
 }
 
 private func handleEvent(event: BEvent) {
