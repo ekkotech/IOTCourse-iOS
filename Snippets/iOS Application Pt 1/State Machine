@@ -1,58 +1,6 @@
 /*** Snippets for iOS Application Part 1, State Machine ***/
 
 /*** State_Machine_Snip_1 ***/
-/*** Insert in BleService properties section ***/
-
-// Queues
-private let cmdQueue = DispatchQueue(label: "com.iotcourse.cmdq", qos: .userInitiated)
-// State machine
-private var machine: Machine? = nil
-// State maps
-// TODO: state action map init - is an entry per state really needed? Can poss. init with [:]??
-private var stateActionMap: StateActionMap = Dictionary.init(uniqueKeysWithValues: BState.allCases.map { ($0, (nil, nil))})
-private var actionMap: ActionMap = Dictionary.init(uniqueKeysWithValues: BState.allCases.map { ($0, [:])})
-private var errorMap: ErrorMap = Dictionary.init(uniqueKeysWithValues: BState.allCases.map { ($0, (nil, .Start))})
-
-/*** End ***/
-
-/*** State_Machine_Snip_2 ***/
-/*** Insert in BleService init ***/
-
-setupStateMaps()
-machine = Machine.init(actionMap: actionMap, stateActionMap: stateActionMap, errorMap: errorMap)
-
-/*** End ***/
-
-/*** State_Machine_Snip_3 ***/
-
-// MARK: - Private functions
-//
-private func setupStateMaps() {
-    
-}
-
-private func handleEvent(event: BEvent) {
-    if let mac = machine {
-        mac.handleEvent(event: event)
-    }
-}
-
-/*** End ***/
-
-/*** State_Machine_Snip_4 ***/
-
-// MARK: - Actions
-//
-extension BleService {
-
-    func performNullAction(event: BEvent, state: BState) {
-        os_log("Trace: event %s, state %s", log: Log.ble, type: .info, event.description, state.description)
-    }
-}
-
-/*** End ***/
-
-/*** State_Machine_Snip_5 ***/
 
 // MARK: - State Machine
 //
@@ -203,3 +151,56 @@ fileprivate final class Machine {
 }
 
 /*** End ***/
+
+/*** State_Machine_Snip_2 ***/
+/*** Insert in BleService properties section ***/
+
+// Queues
+private let cmdQueue = DispatchQueue(label: "com.iotcourse.cmdq", qos: .userInitiated)
+// State machine
+private var machine: Machine? = nil
+// State maps
+// TODO: state action map init - is an entry per state really needed? Can poss. init with [:]??
+private var stateActionMap: StateActionMap = Dictionary.init(uniqueKeysWithValues: BState.allCases.map { ($0, (nil, nil))})
+private var actionMap: ActionMap = Dictionary.init(uniqueKeysWithValues: BState.allCases.map { ($0, [:])})
+private var errorMap: ErrorMap = Dictionary.init(uniqueKeysWithValues: BState.allCases.map { ($0, (nil, .Start))})
+
+/*** End ***/
+
+/*** State_Machine_Snip_3 ***/
+/*** Insert in BleService init ***/
+
+setupStateMaps()
+machine = Machine.init(actionMap: actionMap, stateActionMap: stateActionMap, errorMap: errorMap)
+
+/*** End ***/
+
+/*** State_Machine_Snip_4 ***/
+
+// MARK: - Private functions
+//
+private func setupStateMaps() {
+    
+}
+
+private func handleEvent(event: BEvent) {
+    if let mac = machine {
+        mac.handleEvent(event: event)
+    }
+}
+
+/*** End ***/
+
+/*** State_Machine_Snip_5 ***/
+
+// MARK: - Actions
+//
+extension BleService {
+
+    func performNullAction(event: BEvent, state: BState) {
+        os_log("Trace: event %s, state %s", log: Log.ble, type: .info, event.description, state.description)
+    }
+}
+
+/*** End ***/
+
