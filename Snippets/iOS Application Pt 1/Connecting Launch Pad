@@ -73,6 +73,7 @@ func performScan(event: BEvent, state: BState) throws {
     }
     
     let suuid = CBUUID(string: "F0001110-0451-4000-B000-000000000000")      // TODO: Temporary
+    discoveredPeripheral = nil
     cm.scanForPeripherals(withServices: [suuid], options: nil)
 }
 
