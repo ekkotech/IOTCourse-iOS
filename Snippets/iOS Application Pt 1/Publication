@@ -1,0 +1,144 @@
+/*** Snippets for iOS Application Part 1, Publication ***/
+
+/*** Publication_Snip_1 ***/
+
+internal let nc = NotificationCenter.default        // Application scope
+
+// MARK: - Publication topics
+//
+public extension Notification.Name {
+    static let bleStatus = Notification.Name("bleStatus")
+}
+
+//
+// Statuses
+//
+internal enum BleStatus: CustomStringConvertible {
+    case onLine
+    case offLine
+    case ready
+    
+    var description: String {
+        switch self {
+        case .offLine: return "off-line"
+        case .onLine: return "on-line"
+        case .ready: return "ready"
+        }
+    }
+}
+
+//
+// Notification Payloads
+//
+internal struct BleStatusPayload {
+    var status: BleStatus
+}
+
+/*** End ***/
+
+/*** Publication_Snip_2 ***/
+/*** Insert into didUpdateStatus ***/
+
+var status: BleStatus
+
+switch central.state {
+case .poweredOn:
+    status = .onLine
+case .poweredOff, .resetting, .unsupported, .unknown:
+    status = .offLine
+case .unauthorized:     // iOS 13+ requires user authorisation
+    os_log("Bluetooth unauthorised - set authorisation in Info.plist", log: Log.ble, type: .error, central.state.description)
+    assertionFailure()
+    status = .offLine
+@unknown default:
+    status = .offLine
+}
+
+nc.post(name: .bleStatus, object: BleStatusPayload(status: status))
+
+/*** End ***/
+
+/*** Publication_Snip_3 ***/
+
+a) Change discoveredPeripheral to:
+
+private var attachingWith: (peripheral: CBPeripheral?, service: CBUUID?, isAttached: Bool) = (nil, nil, false)
+
+b) Modify...
+
+func attachPeripheral(service: CBUUID) {
+    
+    attachingWith = (nil, service, false)
+    cmdQueue.async { self.handleEvent(event: .OnLine) }
+}
+
+/*** End ***/
+
+/*** Publication_Snip_4 ***/
+/*** Modify... ***/
+
+func performScan(event: BEvent, state: BState) throws {
+    os_log("In performScan, event: %s state %s", log: Log.ble, type: .info, event.description, state.description)
+    guard let cm = centralManager, let suuid = attachingWith.service else {
+        throw BleError.UninitialisedProperty
+    }
+    
+    cm.scanForPeripherals(withServices: [suuid], options: nil)
+}
+
+/*** End ***/
+
+/*** Publication_Snip_5 ***/
+/*** Add new function ***/
+
+func performNotifyAttached(thisEvent: BEvent, thisState: BState) {
+    os_log("In performNotifyAttached, event: %s state %s", log: Log.ble, type: .info, thisEvent.description, thisState.description)
+
+}
+
+func performNotifyAttached(thisEvent: BEvent, thisState: BState) {
+    os_log("In performNotifyAttached, event: %s state %s", log: Log.ble, type: .info, thisEvent.description, thisState.description)
+    attachingWith.isAttached = true
+    nc.post(name: .bleStatus, object: BleStatusPayload(status: .ready))
+}
+
+/*** End ***/
+
+/*** Publication_Snip_6 ***/
+
+stateActionMap[.Ready] = (onEntry: performNotifyAttached, onExit: nil)
+
+/*** End ***/
+
+/*** Publication_Snip_6 ***/
+/*** In Model... ***/
+
+a)
+private var bleStatus: BleStatus = .offLine
+
+b)
+setupSubscriptions()
+
+c)
+  // MARK: - Private functions
+  //
+ private func setupSubscriptions() {
+     // Status
+     nc.addObserver(forName: .bleStatus, object: nil, queue: nil, using: { notification in
+         
+         if let payload = notification.object as? BleStatusPayload {
+             self.bleStatus = payload.status
+             os_log("BleService is %s", log: Log.model, type: .info, payload.status.description)
+             switch payload.status {
+                 case .onLine:
+                     self.bleService.attachPeripheral(service: self.primaryService)
+                 case .offLine:
+                     break
+                 case .ready:
+                     break
+             }
+         }})
+     
+ }
+
+/*** End ***/
