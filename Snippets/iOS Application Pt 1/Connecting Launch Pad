@@ -1,0 +1,150 @@
+/*** Snippets for iOS Application Part 1, Connecting LaunchPad ***/
+
+/*** Connecting_LaunchPad_Snip_1 ***/
+/*** Insert in BleService setupStateMap ***/
+
+// State action map
+stateActionMap[.Scanning] = (onEntry: performScan, onExit: nil)
+stateActionMap[.Ready] = (onEntry: performConnect, onExit: nil)
+
+// Action map
+//
+actionMap[.Start]?[.OnLine] = (action: performNullAction, nextState: .Scanning)
+actionMap[.Start]?[.OffLine] = (action: performNullAction, nil)
+//
+actionMap[.Scanning]?[.ScanSuccess] = (action: performNullAction, nextState: .Ready)
+actionMap[.Scanning]?[.OffLine] = (action: performNullAction, nextState: .Start)
+//
+actionMap[.Ready]?[.OffLine] = (action: performNullAction, nextState: .Start)
+
+// Error map
+errorMap[.Scanning] = (action: performNullAction, nextState: .Start)
+errorMap[.Ready] = (action: performNullAction, nextState: .Start)
+
+/*** End ***/
+
+/*** Connecting_LaunchPad_Snip_2 ***/
+/*** Insert in BleService centralDidUpdateState ***/
+
+switch central.state {
+case .poweredOn:
+    break
+case .poweredOff:
+    break
+case .resetting, .unsupported, .unknown:
+    break
+case .unauthorized:     // iOS 13+ requires user authorisation
+    break
+@unknown default:
+    break
+}
+
+/*** Full snippet ***/
+
+switch central.state {
+case .poweredOn:
+    cmdQueue.async { self.handleEvent(event: .OnLine) }
+case .poweredOff:
+    break   // iOS will display system message for this case
+case .resetting, .unsupported, .unknown:
+    cmdQueue.async { self.handleEvent(event: .OffLine) }
+case .unauthorized:     // iOS 13+ requires user authorisation
+    os_log("Bluetooth unauthorised - set authorisation in Info.plist", log: Log.ble, type: .error, central.state.description)
+    assertionFailure()
+    cmdQueue.async { self.handleEvent(event: .OffLine) }
+@unknown default:
+    cmdQueue.async { self.handleEvent(event: .OffLine) }
+}
+
+/*** End ***/
+
+/*** Connecting_LaunchPad_Snip_3 ***/
+/*** Insert in BleService Actions section ***/
+
+func performScan(event: BEvent, state: BState) throws {
+    os_log("In performScan, event: %s state %s", log: Log.ble, type: .info, event.description, state.description)
+
+}
+
+func performScan(event: BEvent, state: BState) throws {
+    os_log("In performScan, event: %s state %s", log: Log.ble, type: .info, event.description, state.description)
+    guard let cm = centralManager else {
+        throw BleError.UninitialisedProperty
+    }
+    
+    let suuid = CBUUID(string: "F0001110-0451-4000-B000-000000000000")      // TODO: Temporary
+    cm.scanForPeripherals(withServices: [suuid], options: nil)
+}
+
+/*** Also add error codes (file scope) ***/
+
+// Error management
+//
+internal enum BleError: Error {
+    case UninitialisedProperty
+    
+    var description: String {
+        switch self {
+        case .UninitialisedProperty: return "Required property is nil"
+        }
+    }
+}
+
+/*** End ***/
+
+/*** Connecting_LaunchPad_Snip_4 ***/
+/*** Insert in BleService CBCentralManagerDelegate ***/
+
+func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+    os_log("In didDiscoverPeripheral: %s", log: Log.ble, type: .info, peripheral.identifier.uuidString)
+
+}
+
+func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
+    os_log("In didDiscoverPeripheral: %s", log: Log.ble, type: .info, peripheral.identifier.uuidString)
+
+    central.stopScan()
+    if discoveredPeripheral == nil {        // Discard duplicate discoveries
+        peripheral.delegate = self
+        discoveredPeripheral = peripheral
+        cmdQueue.async { self.handleEvent(event: .ScanSuccess) }
+    }
+}
+
+/*** Also add in properties ***/
+
+private var discoveredPeripheral: CBPeripheral?
+
+/*** End ***/
+
+/*** Connecting_LaunchPad_Snip_5 ***/
+/*** Insert in BleService Actions section ***/
+
+func performConnect(event: BEvent, state: BState) throws {
+    os_log("In performConnect, event: %s state %s", log: Log.ble, type: .info, event.description, state.description)
+    guard let cm = centralManager, let per = discoveredPeripheral else {
+        throw BleError.UninitialisedProperty
+    }
+    
+}
+
+func performConnect(event: BEvent, state: BState) throws {
+    os_log("In performConnect, event: %s state %s", log: Log.ble, type: .info, event.description, state.description)
+    guard let cm = centralManager, let per = discoveredPeripheral else {
+        throw BleError.UninitialisedProperty
+    }
+    
+    cm.connect(per, options: nil)
+}
+
+/*** End ***/
+
+/*** Connecting_LaunchPad_Snip_6 ***/
+/*** Insert in BleService CBCentralManagerDelegate ***/
+
+func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
+    os_log("In didConnect: %s", log: Log.ble, type: .info, peripheral.identifier.uuidString)
+
+}
+
+/*** End ***/
