@@ -1,0 +1,43 @@
+/*** Snippets for iOS Application Part 1, Writing Characteristics UI ***/
+
+/*** Writing_Characs_UI_Snip_1 ***/
+
+a) Setup function
+// MARK: - Private functions
+//
+private func setupControls() {
+    // Tags
+    redLedButton.accessibilityLabel = kEntityRedLed
+    greenLedButton.accessibilityLabel = kEntityGreenLed
+    //
+    redLedButton.layer.borderColor = UIColor.gray.cgColor
+    redLedButton.layer.borderWidth = 1
+    redLedButton.layer.cornerRadius = 4
+    
+    greenLedButton.layer.borderColor = UIColor.gray.cgColor
+    greenLedButton.layer.borderWidth = 1
+    greenLedButton.layer.cornerRadius = 4
+    
+    redLedLabel.layer.borderColor = UIColor.gray.cgColor
+    redLedLabel.layer.borderWidth = 1
+    redLedLabel.layer.cornerRadius = 4
+    redLedLabel.clipsToBounds = true
+
+    greenLedLabel.layer.borderColor = UIColor.gray.cgColor
+    greenLedLabel.layer.borderWidth = 1
+    greenLedLabel.layer.cornerRadius = 4
+    greenLedLabel.clipsToBounds = true
+
+}
+
+b) Add to init
+setupControls()
+
+/** End ***/
+
+/*** Writing_Characs_UI_Snip_2 ***/
+
+sender.isSelected = !sender.isSelected
+md.set(entity: topic, value: sender.isSelected, response: false)
+
+/*** End ***/
