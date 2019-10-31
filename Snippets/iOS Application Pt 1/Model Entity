@@ -1,0 +1,209 @@
+/*** Snippets for iOS Application Part 1, Model Entity ***/
+
+/*** Model_Entity_Snip_1 ***/
+/*** Insert at file level ***/
+
+//
+// Entity public names
+//
+internal let kEntityRedLed          = "redled"
+internal let kEntityGreenLed        = "greenled"
+
+//
+// Publication topics
+//
+public extension Notification.Name {
+    static let entityRedLed = Notification.Name(kEntityRedLed)
+    static let entityGreenLed = Notification.Name(kEntityGreenLed)
+}
+
+//
+// Entity permissions
+fileprivate let kPermitRead         = UInt8(0x01)
+fileprivate let kPermitWrite        = UInt8(0x02)
+fileprivate let kPermitNotify       = UInt8(0x04)
+
+//
+// UUID strings
+fileprivate let tiBaseUuid              = "F0000000-0451-4000-B000-000000000000"
+// LED Service
+fileprivate let ledServiceShortUuid     = "1110"
+fileprivate let redLedShortUuid         = "1111"
+fileprivate let greenLedShortUuid       = "1112"
+
+//
+// CBUUIDs
+// LED Service
+fileprivate let ledServiceUuid = CBUUID(baseUuid: tiBaseUuid, shortUuid: ledServiceShortUuid)
+fileprivate let redLedUuid = CBUUID(baseUuid: tiBaseUuid, shortUuid: redLedShortUuid)
+fileprivate let greenLedUuid = CBUUID(baseUuid: tiBaseUuid, shortUuid: greenLedShortUuid)
+
+fileprivate let defaultService = ledServiceUuid
+
+/*** End ***/
+
+
+/*** Model_Entity_Snip_2 ***/
+
+//
+// Entity definitions
+//
+fileprivate protocol Entity {
+    associatedtype T
+    associatedtype U
+    
+    var name: String { get }
+    var topic: Notification.Name { get }
+    var bleService: BleService { get }
+    var isNotifying: Bool { get set }
+    var didWrite: Bool { get set }
+    var suuid: CBUUID { get }
+    var cuuid: CBUUID { get }
+    var permission: UInt8 { get }
+    var value: T { get set }
+    var bleValue: U { get set }
+    
+    // Client inbound
+    func get()
+    func set(value: T, response: Bool)
+    func setNotify(state: Bool)
+    // Ble inbound
+    func valueChanged(data: Data)
+    mutating func writeConfirm()
+    mutating func notifyStateChanged(state: Bool)
+    // Publication
+    func publish()
+}
+
+fileprivate extension Entity {
+    // Client inbound default implementations
+    func get() {
+        guard (permission & kPermitRead) == kPermitRead else { return }
+        
+        bleService.read(service: suuid, charac: cuuid)
+    }
+    
+    func setNotify(state: Bool) {
+        guard (permission & kPermitNotify) == kPermitNotify else { return }
+        
+        bleService.setNotify(service: suuid,
+                             charac: cuuid,
+                             state: state)
+    }
+    
+    // Ble inbound default implementations
+    mutating func writeConfirm() {
+        didWrite = true
+        publish()
+        didWrite = false
+    }
+    
+    mutating func notifyStateChanged(state: Bool) {
+        isNotifying = state
+        publish()
+    }
+    
+}
+
+fileprivate class BinaryEntity: Entity {
+    typealias T = Bool
+    typealias U = UInt8
+    
+    let name: String
+    let topic: Notification.Name
+    let bleService: BleService
+    var isNotifying: Bool = false
+    var didWrite: Bool = false
+    let suuid: CBUUID
+    let cuuid: CBUUID
+    let permission: UInt8
+    var value: T
+    var bleValue: U
+    
+    init(name: String, topic: Notification.Name, suuid: CBUUID, cuuid: CBUUID, permission: UInt8, bleService: BleService, defaultValue: T) {
+        self.name = name
+        self.topic = topic
+        self.bleService = bleService
+        self.suuid = suuid
+        self.cuuid = cuuid
+        self.permission = permission
+        self.value = defaultValue
+        self.bleValue = defaultValue == false ? 0 : 1
+    }
+    
+    // Client inbound
+    func set(value: T, response: Bool) {
+        guard (permission & kPermitWrite) == kPermitWrite else { return}
+        
+        self.value = value
+        bleValue = value == false ? 0 : 1
+        bleService.write(service: suuid,
+                         charac: cuuid,
+                         data: withUnsafeBytes(of: &bleValue, { Data($0) }),
+                         response: response)
+        if response == false {
+            publish()
+        }
+    }
+    
+    // Ble inbound
+    func valueChanged(data: Data) {
+        guard let result = data.to(type: UInt8.self) else {
+            os_log("ERROR: entity converting data", log: Log.model, type: .error)
+            return
+        }
+        
+        bleValue = result
+        value = result == 0 ? false : true
+        publish()
+    }
+    
+    // Publication
+    func publish() {
+        nc.post(name: topic,
+                object: BinaryPayload(value: value,
+                                      isNotifying: isNotifying,
+                                      didWrite: didWrite))
+    }
+    
+}
+
+//
+// Entity Types
+fileprivate enum EntityType {
+    case binary(BinaryEntity)
+}
+/*** End ***/
+
+/*** Model_Entity_Snip_3 ***/
+
+a) Properties
+private let redLed: BinaryEntity
+private let greenLed: BinaryEntity
+private let lookupByEntity: [String : EntityType]
+private let lookupByCharac: [CBUUID : EntityType]
+
+b) Initialisations
+redLed = BinaryEntity(name: kEntityRedLed,
+                      topic: .entityRedLed,
+                      suuid: ledServiceUuid,
+                      cuuid: redLedUuid,
+                      permission: kPermitRead | kPermitWrite,
+                      bleService: bleService,
+                      defaultValue: false)
+greenLed = BinaryEntity(name: kEntityGreenLed,
+                        topic: .entityGreenLed,
+                        suuid: ledServiceUuid,
+                        cuuid: greenLedUuid,
+                        permission: kPermitRead | kPermitWrite,
+                        bleService: bleService,
+                        defaultValue: false)
+lookupByEntity = [kEntityRedLed : .binary(redLed),
+                  kEntityGreenLed : .binary(greenLed)
+]
+lookupByCharac = [redLedUuid : .binary(redLed),
+                  greenLedUuid : .binary(greenLed),
+]
+
+/*** End ***/
+
