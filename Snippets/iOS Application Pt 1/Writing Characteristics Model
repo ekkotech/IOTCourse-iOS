@@ -1,0 +1,14 @@
+/*** Snippets for iOS Application Part 1, Writing Characs Model ***/
+
+/*** Writing_Characs_Model_Snip_1 ***/
+
+func set(entity: String, value: Bool, response: Bool) {
+    guard let thisEntity = lookupByEntity[entity], bleStatus == .ready else { return }
+
+    switch thisEntity {
+    case .binary(let bin):
+        bin.set(value: value, response: response)
+    }
+}
+
+/*** End ***/
