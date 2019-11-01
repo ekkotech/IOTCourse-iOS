@@ -42,7 +42,6 @@ fileprivate let defaultService = ledServiceUuid
 
 /*** End ***/
 
-
 /*** Model_Entity_Snip_2 ***/
 
 //
@@ -77,30 +76,20 @@ fileprivate protocol Entity {
 
 fileprivate extension Entity {
     // Client inbound default implementations
-    func get() {
-        guard (permission & kPermitRead) == kPermitRead else { return }
-        
-        bleService.read(service: suuid, charac: cuuid)
+    
     }
     
     func setNotify(state: Bool) {
-        guard (permission & kPermitNotify) == kPermitNotify else { return }
-        
-        bleService.setNotify(service: suuid,
-                             charac: cuuid,
-                             state: state)
+     
     }
     
     // Ble inbound default implementations
     mutating func writeConfirm() {
-        didWrite = true
-        publish()
-        didWrite = false
+        
     }
     
     mutating func notifyStateChanged(state: Bool) {
-        isNotifying = state
-        publish()
+    
     }
     
 }
@@ -133,37 +122,17 @@ fileprivate class BinaryEntity: Entity {
     
     // Client inbound
     func set(value: T, response: Bool) {
-        guard (permission & kPermitWrite) == kPermitWrite else { return}
-        
-        self.value = value
-        bleValue = value == false ? 0 : 1
-        bleService.write(service: suuid,
-                         charac: cuuid,
-                         data: withUnsafeBytes(of: &bleValue, { Data($0) }),
-                         response: response)
-        if response == false {
-            publish()
-        }
+    
     }
     
     // Ble inbound
     func valueChanged(data: Data) {
-        guard let result = data.to(type: UInt8.self) else {
-            os_log("ERROR: entity converting data", log: Log.model, type: .error)
-            return
-        }
-        
-        bleValue = result
-        value = result == 0 ? false : true
-        publish()
+    
     }
     
     // Publication
     func publish() {
-        nc.post(name: topic,
-                object: BinaryPayload(value: value,
-                                      isNotifying: isNotifying,
-                                      didWrite: didWrite))
+    
     }
     
 }
