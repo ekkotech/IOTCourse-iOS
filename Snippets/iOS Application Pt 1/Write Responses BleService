@@ -1,0 +1,29 @@
+/*** Snippets for iOS Application Part 1, BleService Skeleton ***/
+
+/*** Write_Responses_BleService_Snip_1 ***/
+
+a) Topic
+static let characWriteConfirm = Notification.Name("characWriteConfirm")
+
+b) Payload
+internal struct CharacWriteConfirmPayload {
+    var charac: CBUUID
+}
+
+/*** End ***/
+
+/*** Write_Responses_BleService_Snip_2 ***/
+
+// MARK: Data Callbacks
+func peripheral(_ peripheral: CBPeripheral, didWriteValueFor characteristic: CBCharacteristic, error: Error?) {
+    os_log("In didWriteValueFor: %s", log: Log.ble, type: .info, characteristic.uuid.uuidString)
+    guard error == nil else {
+        os_log("ERROR: writing characteristic value", log: Log.ble, type: .error)
+        return
+    }
+    
+    nc.post(name: .characWriteConfirm,
+            object: CharacWriteConfirmPayload(charac: characteristic.uuid))
+}
+
+/*** End ***/
