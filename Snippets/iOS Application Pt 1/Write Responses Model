@@ -1,0 +1,49 @@
+/*** Snippets for iOS Application Part 1, Write Responses - Model ***/
+
+/*** Write_Responses_Model_Snip_1 ***/
+
+// Write confirm
+nc.addObserver(forName: .characWriteConfirm,
+               object: nil,
+               queue: nil,
+               using: { notification in
+                if let payload = notification.object as? CharacWriteConfirmPayload,
+                    let thisEntity = self.lookupByCharac[payload.charac] {
+                    switch thisEntity {
+                    case .binary(var bin):
+                        bin.writeConfirm()
+                    }
+                }
+})
+
+/*** End ***/
+
+/*** Write_Responses_Model_Snip_2 ***/
+
+mutating func writeConfirm() {
+    didWrite = true
+    publish()
+    didWrite = false
+}
+
+/*** End ***/
+
+/*** Write_Responses_Model_Snip_3 ***/
+
+a)
+// Publication
+func publish() {
+    nc.post(name: topic,
+            object: BinaryPayload(value: value,
+                                  isNotifying: isNotifying,
+                                  didWrite: didWrite))
+}
+
+b) In client API, set
+if response == false {
+    publish()
+}
+
+/*** End ***/
+
+
