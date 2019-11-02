@@ -1,0 +1,96 @@
+/*** Snippets for iOS Application Part 1, Queueing ***/
+
+/*** Queueing_Snip_1 ***/
+
+a)
+//
+// Timer parameters
+//
+fileprivate let kWatchdogTimeOut = TimeInterval(35.0)
+
+b)
+private var opQueue = TimedOperationQueue(name: "com.iotcourse.opq",
+                                          QoS: .userInitiated,
+                                          timeout: kWatchdogTimeOut)
+
+c)
+opQueue.maxConcurrentOperationCount = 1     // Serial queue
+
+/*** End ***/
+
+/*** Queueing_Snip_2 ***/
+
+a)
+func setNotify(service: CBUUID, charac: CBUUID, state: Bool) {
+
+    opQueue.addOperation(AppOperation(queue: cmdQueue,
+                                      dispatchBlock: {
+                                        self.activeCommand = ActiveCommand(suuid: service,
+                                                                      cuuid: charac,
+                                                                      command: .setNotify(state))
+                                        self.cmdQueue.async { self.handleEvent(event: .SetNotify) }
+    }))
+    
+}
+
+b)
+func write(service: CBUUID, charac: CBUUID, data: Data, response: Bool) {
+    
+    opQueue.addOperation(AppOperation(queue: cmdQueue,
+                                      dispatchBlock: {
+                                        self.activeCommand = ActiveCommand(suuid: service,
+                                                                      cuuid: charac,
+                                                                      command: .write(data, response == true ? .withResponse : .withoutResponse))
+                                        self.cmdQueue.async { self.handleEvent(event: .Write) }
+    }))
+
+}
+
+/*** End ***/
+
+/*** Queueing_Snip_3 ***/
+
+private func completeOperation() {
+    if let aop = opQueue.operations.first as? AppOperation {
+        aop.isExecuting = false
+        aop.isFinished = true
+    }
+}
+
+/*** End ***/
+
+/*** Queueing_Snip_4 ***/
+/*** Add to performNotifyAttach ***/
+
+else {
+    completeOperation()
+}
+
+/*** End ***/
+
+/*** Queueing_Snip_4 ***/
+
+a)
+func performReset(thisEvent: BEvent, thisState: BState) throws {
+    os_log("In performReset, event: %s state %s", log: Log.ble, type: .info, thisEvent.description, thisState.description)
+
+    if case BEvent.OffLine = thisEvent {
+        // CoreBluetooth has gone off-line, notify out
+        nc.post(name: .bleStatus, object: BleStatusPayload(status: .offLine))
+    }
+
+    attachingWith = (nil, nil, false)
+    activeCommand = ActiveCommand(suuid: nil, cuuid: nil, command: .read)
+    
+    for op in opQueue.operations {
+        if let aop = op as? AppOperation {
+            aop.isExecuting = false
+            aop.isFinished = true
+        }
+    }
+}
+
+b)
+stateActionMap[.Start] = (onEntry: performReset, onExit: nil)
+
+/*** End ***/
