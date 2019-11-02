@@ -1,0 +1,151 @@
+/*** Snippets for iOS Application Part 1, Notifications Model ***/
+
+/*** Notifications_Model_Snip_1 ***/
+/*** Static set up ***/
+
+a)
+internal let kEntityLeftButton      = "leftbutton"
+internal let kEntityRightButton     = "rightbutton"
+
+b)
+static let entityLeftButton = Notification.Name(kEntityLeftButton)
+static let entityRightButton = Notification.Name(kEntityRightButton)
+
+c)
+// Button service
+fileprivate let buttonServiceShortUuid  = "1120"
+fileprivate let leftButtonShortUuid     = "1121"
+fileprivate let rightButtonShortUuid    = "1122"
+
+d)
+// Button service
+fileprivate let buttonServiceUuid = CBUUID(baseUuid: tiBaseUuid, shortUuid: buttonServiceShortUuid)
+fileprivate let leftButtonUuid = CBUUID(baseUuid: tiBaseUuid, shortUuid: leftButtonShortUuid)
+fileprivate let rightButtonUuid = CBUUID(baseUuid: tiBaseUuid, shortUuid: rightButtonShortUuid)
+
+e)
+private let leftButton: BinaryEntity
+private let rightButton: BinaryEntity
+
+f)
+leftButton = BinaryEntity(name: kEntityLeftButton,
+                          topic: .entityLeftButton,
+                          suuid: buttonServiceUuid,
+                          cuuid: leftButtonUuid,
+                          permission: kPermitRead | kPermitNotify,
+                          bleService: bleService,
+                          defaultValue: false)
+rightButton = BinaryEntity(name: kEntityRightButton,
+                           topic: .entityRightButton,
+                           suuid: buttonServiceUuid,
+                           cuuid: rightButtonUuid,
+                           permission: kPermitRead | kPermitNotify,
+                           bleService: bleService,
+                           defaultValue: false)
+
+g)
+lookupByEntity = [kEntityRedLed : .binary(redLed),
+                  kEntityGreenLed : .binary(greenLed),
+                  kEntityLeftButton : .binary(leftButton),
+                  kEntityRightButton : .binary(rightButton)
+]
+lookupByCharac = [redLedUuid : .binary(redLed),
+                  greenLedUuid : .binary(greenLed),
+                  leftButtonUuid : .binary(leftButton),
+                  rightButtonUuid : .binary(rightButton)
+]
+
+/*** End ***/
+
+/*** Notifications_Model_Snip_2 ***/
+
+func setNotify(entity: String, state: Bool) {
+    guard let thisEntity = lookupByEntity[entity], bleStatus == .ready else { return }
+
+    switch thisEntity {
+    case .binary(let bin):
+        bin.setNotify(state: state)
+    }
+}
+
+/*** End ***/
+
+/*** Notifications_Model_Snip_3 ***/
+
+func setNotify(state: Bool) {
+    guard (permission & kPermitNotify) == kPermitNotify else { return }
+    
+    bleService.setNotify(service: suuid,
+                         charac: cuuid,
+                         state: state)
+
+}
+
+/*** End ***/
+
+/*** Notifications_Model_Snip_4 ***/
+
+// Charac notification state
+nc.addObserver(forName: .characNotifyStateChanged,
+               object: nil,
+               queue: nil,
+               using: { notification in
+                if let payload = notification.object as? CharacNotifyStateChangedPayload,
+                    let thisEntity = self.lookupByCharac[payload.charac] {
+                    switch thisEntity {
+                    case .binary(var bin):
+                        bin.notifyStateChanged(state: payload.state)
+                    }
+                }
+})
+
+/*** End ***/
+
+/*** Notifications_Model_Snip_5 ***/
+
+// Charac value
+nc.addObserver(forName: .characValueChanged,
+               object: nil,
+               queue: nil,
+               using: { notification in
+                if let payload = notification.object as? CharacValueChangedPayload,
+                    let thisEntity = self.lookupByCharac[payload.charac] {
+                    switch thisEntity {
+                    case .binary(let bin):
+                        bin.valueChanged(data: payload.data)
+                    }
+                }
+})
+
+/*** End ***/
+
+/*** Notifications_Model_Snip_6 ***/
+
+mutating func notifyStateChanged(state: Bool) {
+    isNotifying = state
+    publish()
+}
+
+/*** End ***/
+
+/*** Notifications_Model_Snip_7 ***/
+
+func valueChanged(data: Data) {
+    guard let result = data.to(type: UInt8.self) else {
+        os_log("ERROR: converting data", log: Log.model, type: .error)
+        return
+    }
+    
+    bleValue = result
+    value = result == 0 ? false : true
+    publish()
+}
+
+/*** End ***/
+
+/*** Notifications_Model_Snip_8 ***/
+
+case .ready:
+    self.leftButton.setNotify(state: true)
+
+/*** End ***/
