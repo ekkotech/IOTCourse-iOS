@@ -1,0 +1,65 @@
+/*** Snippets for iOS Application Part 1, Reading ***/
+
+/*** Reading_Snip_1 ***/
+/*** Model API ***/
+
+func get(entity: String) {
+    func get(entity: String) {
+        guard let thisEntity = lookupByEntity[entity], bleStatus == .ready else { return }
+
+        switch thisEntity {
+        case .binary(let bin):
+            bin.get()
+        }
+    }
+}
+
+/*** End ***/
+
+
+/*** Reading_Snip_2 ***/
+/*** Model Entity extension ***/
+
+func get() {
+    guard (permission & kPermitRead) == kPermitRead else { return }
+    
+    bleService.read(service: suuid, charac: cuuid)
+}
+
+/*** End ***/
+
+/*** Reading_Snip_3 ***/
+/*** Model setupSubscriptions ***/
+
+self.redLed.get()
+self.greenLed.get()
+
+/*** End ***/
+
+
+/*** Reading_Snip_4 ***/
+/*** BleService ***/
+
+a)
+actionMap[.Ready]?[.Read] = (action: performConnect, nextState: .RWNotify)
+
+b)
+func read(service: CBUUID, charac: CBUUID) {
+    opQueue.addOperation(AppOperation(queue: cmdQueue,
+                                      dispatchBlock: {
+                                        self.activeCommand = ActiveCommand(suuid: service,
+                                                                      cuuid: charac,
+                                                                      command: .read)
+                                        self.cmdQueue.async { self.handleEvent(event: .Read) }
+    }))
+}
+
+c) In performCommand
+
+case .read:
+    pl.peripheral.readValue(for: pl.charac)
+case .readRSSI:
+    break       // Not valid here
+
+/*** End ***/
+
