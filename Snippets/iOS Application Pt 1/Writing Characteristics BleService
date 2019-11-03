@@ -144,6 +144,8 @@ actionMap[.RWNotify]?[.DiscoverServicesSuccess(nil)] = (action: performDiscoverC
 actionMap[.RWNotify]?[.DiscoverServicesFail] = (action: performNullAction, nextState: .Ready)
 actionMap[.RWNotify]?[.DiscoverCharacteristicsSuccess(nil)] = (action: performCommand, nextState: .Ready)
 actionMap[.RWNotify]?[.DiscoverCharacteristicsFail] = (action: performNullAction, nextState: .Ready)
+actionMap[.RWNotify]?[.DisconnectedWithError] = (action: performNullAction, nextState: .Ready)
+actionMap[.RWNotify]?[.OffLine] = (action: performNullAction, nextState: .Start)
 
 /*** Error map: Add ***/
 errorMap[.Start] = (action: performNullAction, nextState: .Start)
