@@ -1,1 +1,5 @@
+# gitignore for Xcode IOTCourse-iOS
+#
 .DS_Store
+#
+**/Utilities/Uuid.swift
