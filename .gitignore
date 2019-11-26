@@ -1,11 +1,7 @@
-# IOTCourse3 Xcode/Swift
+# IOTCourse Xcode/Swift
 #
-.DS_Store
+*.DS_Store
  
-Uuid.swift
-**/Uuid.swift
-**/Utilities/Uuid.swift
-
-# Project files
-**/IOTCourse3.xcodeproj
-**/IOTCourse3.xcodeproj/*
+IOTCourseTests/
+IOTCourseUITests/
+IOTCourse.xcodeproj/
