@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 
 extension UIColor {
-    func withRedComponent(red: CGFloat) -> UIColor {
+    func withRedComponent(_ red: CGFloat) -> UIColor {
         var thisRed: CGFloat = 0.0
         var thisGreen: CGFloat = 0.0
         var thisBlue: CGFloat = 0.0
@@ -22,7 +22,7 @@ extension UIColor {
 }
 
 extension UIColor {
-    func withGreenComponent(green: CGFloat) -> UIColor {
+    func withGreenComponent(_ green: CGFloat) -> UIColor {
         var thisRed: CGFloat = 0.0
         var thisGreen: CGFloat = 0.0
         var thisBlue: CGFloat = 0.0
@@ -34,7 +34,7 @@ extension UIColor {
 }
 
 extension UIColor {
-    func withBlueComponent(blue: CGFloat) -> UIColor {
+    func withBlueComponent(_ blue: CGFloat) -> UIColor {
         var thisRed: CGFloat = 0.0
         var thisGreen: CGFloat = 0.0
         var thisBlue: CGFloat = 0.0
@@ -46,7 +46,7 @@ extension UIColor {
 }
 
 extension UIColor {
-    func withHueComponent(hue: CGFloat) -> UIColor {
+    func withHueComponent(_ hue: CGFloat) -> UIColor {
         var thisHue: CGFloat = 0.0
         var thisSaturation: CGFloat = 0.0
         var thisBrightness: CGFloat = 0.0
@@ -58,7 +58,7 @@ extension UIColor {
 }
 
 extension UIColor {
-    func withSaturationComponent(saturation: CGFloat) -> UIColor {
+    func withSaturationComponent(_ saturation: CGFloat) -> UIColor {
         var thisHue: CGFloat = 0.0
         var thisSaturation: CGFloat = 0.0
         var thisBrightness: CGFloat = 0.0
@@ -70,7 +70,7 @@ extension UIColor {
 }
 
 extension UIColor {
-    func withBrightnessComponent(brightness: CGFloat) -> UIColor {
+    func withBrightnessComponent(_ brightness: CGFloat) -> UIColor {
         var thisHue: CGFloat = 0.0
         var thisSaturation: CGFloat = 0.0
         var thisBrightness: CGFloat = 0.0
